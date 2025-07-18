@@ -15,10 +15,11 @@ from pxr import Usd, Gf
 
 # High level Isaac sim APIs
 import omni.usd
-from isaacsim.core.utils.prims import define_prim, get_prim_at_path
+from isaacsim.core.utils.prims import define_prim, get_prim_at_path, create_prim
 from omni.usd import get_stage_next_free_path
 from isaacsim.core.api.robots.robot import Robot
 from omni.isaac.dynamic_control import _dynamic_control
+import omni.graph.core as og
 
 # Extension APIs
 from pegasus.simulator.logic.state import State
@@ -44,6 +45,45 @@ def get_world_transform_xform(prim: Usd.Prim):
 
 
 class Vehicle(Robot):
+    # all the code around the zed integration
+    def _init_zed_integration(self, stage_prefix: str):
+        zed_usd_path = PegasusInterface().zed_usd_path
+        self._zed_prefix = get_stage_next_free_path(
+            self._current_stage, stage_prefix + "/body/zed", False)
+        self._zed_prim = create_prim(
+            prim_path=self._zed_prefix,
+            prim_type="Xform",
+            usd_path=zed_usd_path,
+            translation=np.array([0.1, 0.0, -0.07])
+        )
+
+        # https://docs.isaacsim.omniverse.nvidia.com/4.2.0/advanced_tutorials/tutorial_advanced_omnigraph_scripting.html#isaac-sim-app-tutorial-advanced-omnigraph-scripting
+        keys = og.Controller.Keys
+        graph_path = "/ActionGraph"
+        (graph_handle, nodes, _, _) = og.Controller.edit(
+            {"graph_path": graph_path, "evaluator_name": "execution"},
+            {
+                keys.CREATE_NODES: [
+                    ("on_playback_tick", "omni.graph.action.OnPlaybackTick"),
+                    ("zed_camera_streamer", "sl.sensor.camera.ZED_Camera"),
+                ],
+                keys.SET_VALUES: [
+                    ("zed_camera_streamer.inputs:camera_prim", self._zed_prefix)
+                ],
+                keys.CONNECT: [
+                    ("on_playback_tick.outputs:tick",
+                     "zed_camera_streamer.inputs:exec_in")
+                ]
+            }
+        )
+
+    def _init_follow_camera(self, stage_prefix: str):
+        self._follow_camera_path = get_stage_next_free_path(
+            self._current_stage, stage_prefix + "/folloCameraBody", False)
+        self._follow_camera_prim = create_prim(
+            prim_path=self._follow_camera_path,
+            prim_type="Camera"
+        )
 
     def __init__(
         self,
@@ -84,15 +124,8 @@ class Vehicle(Robot):
         self._prim = get_prim_at_path(self._stage_prefix)
         self._prim.GetReferences().AddReference(self._usd_file)
 
-        zed_usd_path = "/home/ubuntu/Documents/Kit/shared/zed-isaac-sim/usd/ZED_X.usdc"
-        self._zed_prefix = get_stage_next_free_path(
-            self._current_stage, stage_prefix + "/body/zed", False)
-        self._zed_prim = define_prim(self._zed_prefix, "Xform")
-        self._zed_prim = get_prim_at_path(self._zed_prefix)
-        self._zed_prim.GetReferences().AddReference(zed_usd_path)
-
-        # position = np.array([0.1, 0.0, 0.06])
-        # set_world_pose(self._zed_prefix, position=position)
+        self._init_zed_integration(stage_prefix)
+        # self._init_follow_camera(stage_prefix)
 
         # Initialize the "Robot" class
         # Note: we need to change the rotation to have qw first, because NVidia

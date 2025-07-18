@@ -28,19 +28,20 @@ ASSET_PATH = ROOT + "/pegasus.simulator/pegasus/simulator/assets"
 ROBOTS_ASSETS = ASSET_PATH + "/Robots"
 
 # Define the built in robots of the extension
-ROBOTS = {"Iris": ROBOTS_ASSETS + "/Iris/iris.usd"} #, "Flying Cube": ROBOTS_ASSETS + "/iris_cube.usda"}
+# , "Flying Cube": ROBOTS_ASSETS + "/iris_cube.usda"}
+ROBOTS = {"Iris": ROBOTS_ASSETS + "/Iris/iris.usd"}
 
 # Setup the default simulation environments path
 NVIDIA_ASSETS_PATH = str(nucleus.get_assets_root_path())
 ISAAC_SIM_ENVIRONMENTS = "/Isaac/Environments"
 NVIDIA_SIMULATION_ENVIRONMENTS = {
+    "Warehouse": "Simple_Warehouse/warehouse.usd",
     "Default Environment": "Grid/default_environment.usd",
     "Black Gridroom": "Grid/gridroom_black.usd",
     "Curved Gridroom": "Grid/gridroom_curved.usd",
     "Hospital": "Hospital/hospital.usd",
     "Office": "Office/office.usd",
     "Simple Room": "Simple_Room/simple_room.usd",
-    "Warehouse": "Simple_Warehouse/warehouse.usd",
     "Warehouse with Forklifts": "Simple_Warehouse/warehouse_with_forklifts.usd",
     "Warehouse with Shelves": "Simple_Warehouse/warehouse_multiple_shelves.usd",
     "Full Warehouse": "Simple_Warehouse/full_warehouse.usd",
@@ -60,7 +61,8 @@ SIMULATION_ENVIRONMENTS = {}
 # Add the Isaac Sim assets to the list
 for asset in NVIDIA_SIMULATION_ENVIRONMENTS:
     SIMULATION_ENVIRONMENTS[asset] = (
-        NVIDIA_ASSETS_PATH + ISAAC_SIM_ENVIRONMENTS + "/" + NVIDIA_SIMULATION_ENVIRONMENTS[asset]
+        NVIDIA_ASSETS_PATH + ISAAC_SIM_ENVIRONMENTS +
+        "/" + NVIDIA_SIMULATION_ENVIRONMENTS[asset]
     )
 
 # Add the omniverse assets to the list
@@ -82,7 +84,7 @@ WORLD_SETTINGS = {
         "device": "cpu"
     },
     'ardupilot': {
-        "physics_dt": 1.0 / 800.0, # Reach communication of 250hz with ardupilot sitl
+        "physics_dt": 1.0 / 800.0,  # Reach communication of 250hz with ardupilot sitl
         "stage_units_in_meters": 1.0,
         "rendering_dt": 1.0 / 100.0,
         "device": "cpu"

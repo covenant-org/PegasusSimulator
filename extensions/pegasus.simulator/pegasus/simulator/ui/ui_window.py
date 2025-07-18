@@ -124,14 +124,9 @@ class WidgetWindow(ui.Window):
                     ui.Label("World Assets",
                              width=WidgetWindow.LABEL_PADDING, height=10.0)
 
-                    default_env_index = 0
-                    for index, env in enumerate(SIMULATION_ENVIRONMENTS):
-                        if env == "Warehouse":
-                            default_env_index = index
-
                     # Combo box with the available environments to select from
                     dropdown_menu = ui.ComboBox(
-                        default_env_index, height=10, name="environments")
+                        0, height=10, name="environments")
                     for environment in SIMULATION_ENVIRONMENTS:
                         dropdown_menu.model.append_child_item(
                             None, ui.SimpleStringModel(environment))
