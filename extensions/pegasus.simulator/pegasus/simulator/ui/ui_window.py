@@ -60,7 +60,8 @@ class WidgetWindow(ui.Window):
         super().__init__(
             WINDOW_TITLE, width=WidgetWindow.WINDOW_WIDTH, height=WidgetWindow.WINDOW_HEIGHT, visible=True, **kwargs
         )
-        self.deferred_dock_in("Property", ui.DockPolicy.CURRENT_WINDOW_IS_ACTIVE)
+        self.deferred_dock_in(
+            "Property", ui.DockPolicy.CURRENT_WINDOW_IS_ACTIVE)
 
         # Setup the delegate that will bridge between the logic and the UI
         self._delegate = delegate
@@ -87,7 +88,7 @@ class WidgetWindow(ui.Window):
 
         # Define the UI of the widget window
         with self.frame:
-        
+
             with ui.ScrollingFrame(horizontal_scrollbar_policy=ui.ScrollBarPolicy.SCROLLBAR_ALWAYS_ON, vertical_scrollbar_policy=ui.ScrollBarPolicy.SCROLLBAR_ALWAYS_ON):
 
                 # Vertical Stack of menus
@@ -99,7 +100,7 @@ class WidgetWindow(ui.Window):
                     # Create a frame for selecting which scene to load
                     self._scene_selection_frame()
                     ui.Spacer(height=5)
-                    
+
                     # Create a frame for selecting which vehicle to load in the simulation environment
                     self._robot_selection_frame()
                     ui.Spacer(height=5)
@@ -120,12 +121,15 @@ class WidgetWindow(ui.Window):
 
                 # Iterate over all existing pre-made worlds bundled with this extension
                 with ui.HStack():
-                    ui.Label("World Assets", width=WidgetWindow.LABEL_PADDING, height=10.0)
+                    ui.Label("World Assets",
+                             width=WidgetWindow.LABEL_PADDING, height=10.0)
 
                     # Combo box with the available environments to select from
-                    dropdown_menu = ui.ComboBox(0, height=10, name="environments")
+                    dropdown_menu = ui.ComboBox(
+                        0, height=10, name="environments")
                     for environment in SIMULATION_ENVIRONMENTS:
-                        dropdown_menu.model.append_child_item(None, ui.SimpleStringModel(environment))
+                        dropdown_menu.model.append_child_item(
+                            None, ui.SimpleStringModel(environment))
 
                     # Allow the delegate to know which option was selected in the dropdown menu
                     self._delegate.set_scene_dropdown(dropdown_menu.model)
@@ -138,30 +142,48 @@ class WidgetWindow(ui.Window):
                         with ui.HStack():
 
                             # Latitude
-                            ui.Label("Latitude", name="label", width=WidgetWindow.LABEL_PADDING-50)
-                            latitude_field = ui.FloatField(name="latitude", precision=6)
-                            latitude_field.model.set_value(self._delegate._latitude)
-                            self._delegate.set_latitude_field(latitude_field.model)
-                            ui.Circle(name="transform", width=20, height=20, radius=3.5, size_policy=ui.CircleSizePolicy.FIXED)
+                            ui.Label("Latitude", name="label",
+                                     width=WidgetWindow.LABEL_PADDING-50)
+                            latitude_field = ui.FloatField(
+                                name="latitude", precision=6)
+                            latitude_field.model.set_value(
+                                self._delegate._latitude)
+                            self._delegate.set_latitude_field(
+                                latitude_field.model)
+                            ui.Circle(name="transform", width=20, height=20,
+                                      radius=3.5, size_policy=ui.CircleSizePolicy.FIXED)
 
                             # Longitude
-                            ui.Label("Longitude", name="label", width=WidgetWindow.LABEL_PADDING-50)
-                            longitude_field = ui.FloatField(name="longitude", precision=6)
-                            longitude_field.model.set_value(self._delegate._longitude)
-                            self._delegate.set_longitude_field(longitude_field.model)
-                            ui.Circle(name="transform", width=20, height=20, radius=3.5, size_policy=ui.CircleSizePolicy.FIXED)
+                            ui.Label("Longitude", name="label",
+                                     width=WidgetWindow.LABEL_PADDING-50)
+                            longitude_field = ui.FloatField(
+                                name="longitude", precision=6)
+                            longitude_field.model.set_value(
+                                self._delegate._longitude)
+                            self._delegate.set_longitude_field(
+                                longitude_field.model)
+                            ui.Circle(name="transform", width=20, height=20,
+                                      radius=3.5, size_policy=ui.CircleSizePolicy.FIXED)
 
                             # Altitude
-                            ui.Label("Altitude", name="label", width=WidgetWindow.LABEL_PADDING-50)
-                            altitude_field = ui.FloatField(name="altitude", precision=6)
-                            altitude_field.model.set_value(self._delegate._altitude)
-                            self._delegate.set_altitude_field(altitude_field.model)
-                            ui.Circle(name="transform", width=20, height=20, radius=3.5, size_policy=ui.CircleSizePolicy.FIXED)
+                            ui.Label("Altitude", name="label",
+                                     width=WidgetWindow.LABEL_PADDING-50)
+                            altitude_field = ui.FloatField(
+                                name="altitude", precision=6)
+                            altitude_field.model.set_value(
+                                self._delegate._altitude)
+                            self._delegate.set_altitude_field(
+                                altitude_field.model)
+                            ui.Circle(name="transform", width=20, height=20,
+                                      radius=3.5, size_policy=ui.CircleSizePolicy.FIXED)
 
                         with ui.HStack():
-                            ui.Button("Set", enabled=True, clicked_fn=self._delegate.on_set_new_global_coordinates)
-                            ui.Button("Reset", enabled=True, clicked_fn=self._delegate.on_reset_global_coordinates)
-                            ui.Button("Make Default", enabled=True, clicked_fn=self._delegate.on_set_new_default_global_coordinates)
+                            ui.Button(
+                                "Set", enabled=True, clicked_fn=self._delegate.on_set_new_global_coordinates)
+                            ui.Button(
+                                "Reset", enabled=True, clicked_fn=self._delegate.on_reset_global_coordinates)
+                            ui.Button("Make Default", enabled=True,
+                                      clicked_fn=self._delegate.on_set_new_default_global_coordinates)
 
                 ui.Spacer(height=0)
 
@@ -216,27 +238,32 @@ class WidgetWindow(ui.Window):
                             alignment=ui.Alignment.CENTER,
                         )
                     ui.Spacer(width=10)
-                    
+
                     with ui.VStack():
                         with ui.HStack():
                             # Iterate over all existing robots in the extension
-                            ui.Label("Vehicle Model", name="label", width=WidgetWindow.LABEL_PADDING, alignment=ui.Alignment.TOP)
+                            ui.Label("Vehicle Model", name="label",
+                                     width=WidgetWindow.LABEL_PADDING, alignment=ui.Alignment.TOP)
 
                             # Combo box with the available vehicles to select from
                             dropdown_menu = ui.ComboBox(0, name="robots")
                             for robot in ROBOTS:
-                                dropdown_menu.model.append_child_item(None, ui.SimpleStringModel(robot))
-                            self._delegate.set_vehicle_dropdown(dropdown_menu.model)
+                                dropdown_menu.model.append_child_item(
+                                    None, ui.SimpleStringModel(robot))
+                            self._delegate.set_vehicle_dropdown(
+                                dropdown_menu.model)
 
                         with ui.HStack():
-                            ui.Label("Vehicle ID", name="label", width=WidgetWindow.LABEL_PADDING, alignment=ui.Alignment.TOP)
+                            ui.Label(
+                                "Vehicle ID", name="label", width=WidgetWindow.LABEL_PADDING, alignment=ui.Alignment.TOP)
                             vehicle_id_field = ui.IntField()
-                            self._delegate.set_vehicle_id_field(vehicle_id_field.model)
+                            self._delegate.set_vehicle_id_field(
+                                vehicle_id_field.model)
 
                 with ui.HStack():
                     # Add a frame transform to select the position of where to place the selected robot in the world
                     self._transform_frame()
-                
+
                 # Button to load the drone
                 ui.Button(
                     "Load Vehicle",
@@ -252,7 +279,7 @@ class WidgetWindow(ui.Window):
         The UI elements include a thumbnail of the backend logo, three buttons to choose between PX4, ArduPilot, and ROS 2,
         and two collapsible frames for configuring PX4 and ArduPilot settings.
         """
-        
+
         # Auxiliary function to handle the "switch behaviour" of the buttons that are used to choose between backends
         def handle_backend_switch(
             self,
@@ -269,7 +296,7 @@ class WidgetWindow(ui.Window):
                 px4_button.enabled = False
                 ardupilot_button.enabled = True
                 ros2_button.enabled = True
-                
+
                 px4_button.set_style(WidgetWindow.BUTTON_SELECTED_STYLE)
                 ardupilot_button.set_style(WidgetWindow.BUTTON_BASE_STYLE)
                 ros2_button.set_style(WidgetWindow.BUTTON_BASE_STYLE)
@@ -278,7 +305,6 @@ class WidgetWindow(ui.Window):
                 px4_menu.visible = True
                 ardupilot_menu.enabled = False
                 ardupilot_menu.visible = False
-                
 
             elif button == BACKENDS['ardupilot']:
                 px4_button.enabled = True
@@ -309,7 +335,7 @@ class WidgetWindow(ui.Window):
                 px4_menu.visible = False
                 ardupilot_menu.enabled = False
                 ardupilot_menu.visible = False
-            
+
             logo_image.source_url = BACKENDS_THUMBMAILS[button]
 
             # Handle the logic of switching between the two operating modes
@@ -319,14 +345,14 @@ class WidgetWindow(ui.Window):
             ui.Spacer(height=0)
             with ui.VStack(height=0, spacing=10, name="frame_v_stack"):
                 ui.Spacer(height=WidgetWindow.GENERAL_SPACING)
-                
+
                 # Thumbnail of backend logo
                 with ui.HStack():
                     with ui.ZStack(width=WidgetWindow.LABEL_PADDING):
                         ui.Rectangle(
                             alignment=ui.Alignment.CENTER,
                             width=200,
-                            height=WidgetWindow.BUTTON_HEIGHT * 3, # Match height of 3 backend buttons
+                            height=WidgetWindow.BUTTON_HEIGHT * 3,  # Match height of 3 backend buttons
                         )
                         logo_image = ui.Image(
                             BACKENDS_THUMBMAILS["px4"],
@@ -357,9 +383,11 @@ class WidgetWindow(ui.Window):
                             enabled=True,
                             visible=True
                         )
-              
-                px4_menu = ui.CollapsableFrame("PX4 Configurations", collapsed=False)
-                ardupilot_menu = ui.CollapsableFrame("Ardupilot Configurations", collapsed=False)
+
+                px4_menu = ui.CollapsableFrame(
+                    "PX4 Configurations", collapsed=False)
+                ardupilot_menu = ui.CollapsableFrame(
+                    "Ardupilot Configurations", collapsed=False)
 
                 # Set the auxiliary function to handle the switch between both backends
                 px4_button.set_clicked_fn(lambda: handle_backend_switch(
@@ -371,58 +399,84 @@ class WidgetWindow(ui.Window):
                 ros2_button.set_clicked_fn(lambda: handle_backend_switch(
                     self, px4_button, ardupilot_button, ros2_button, BACKENDS["ros2"], logo_image, px4_menu, ardupilot_menu)
                 )
-        
+
                 # UI to configure the PX4 settings
                 with px4_menu:
                     with ui.VStack(height=0, spacing=10, name="frame_v_stack"):
                         ui.Spacer(height=WidgetWindow.GENERAL_SPACING)
                         with ui.HStack():
-                            ui.Label("Auto-launch PX4", name="label", width=WidgetWindow.LABEL_PADDING - 20)
+                            ui.Label("Auto-launch PX4", name="label",
+                                     width=WidgetWindow.LABEL_PADDING - 20)
                             px4_checkbox = ui.CheckBox()
-                            px4_checkbox.model.set_value(self._delegate._autostart_px4)
-                            self._delegate.set_px4_autostart_checkbox(px4_checkbox.model)
+                            px4_checkbox.model.set_value(
+                                self._delegate._autostart_px4)
+                            self._delegate.set_px4_autostart_checkbox(
+                                px4_checkbox.model)
 
                         with ui.HStack():
-                            ui.Label("PX4 Path", name="label", width=WidgetWindow.LABEL_PADDING - 20)
-                            px4_path_field = ui.StringField(name="px4_path", width=300)
-                            px4_path_field.model.set_value(self._delegate._px4_dir)
-                            self._delegate.set_px4_directory_field(px4_path_field.model)
+                            ui.Label("PX4 Path", name="label",
+                                     width=WidgetWindow.LABEL_PADDING - 20)
+                            px4_path_field = ui.StringField(
+                                name="px4_path", width=300)
+                            px4_path_field.model.set_value(
+                                self._delegate._px4_dir)
+                            self._delegate.set_px4_directory_field(
+                                px4_path_field.model)
 
-                            ui.Button("Reset", enabled=True, clicked_fn=self._delegate.on_reset_px4_path)
-                            ui.Button("Make Default", enabled=True, clicked_fn=self._delegate.on_set_new_default_px4_path)
+                            ui.Button("Reset", enabled=True,
+                                      clicked_fn=self._delegate.on_reset_px4_path)
+                            ui.Button("Make Default", enabled=True,
+                                      clicked_fn=self._delegate.on_set_new_default_px4_path)
 
                         with ui.HStack():
-                            ui.Label("PX4 airframe", name="label", width=WidgetWindow.LABEL_PADDING - 20)
-                            px4_airframe_field = ui.StringField(name="px4_model")
-                            px4_airframe_field.model.set_value(self._delegate._px4_airframe)
-                            self._delegate.set_px4_airframe_field(px4_airframe_field.model)
+                            ui.Label("PX4 airframe", name="label",
+                                     width=WidgetWindow.LABEL_PADDING - 20)
+                            px4_airframe_field = ui.StringField(
+                                name="px4_model")
+                            px4_airframe_field.model.set_value(
+                                self._delegate._px4_airframe)
+                            self._delegate.set_px4_airframe_field(
+                                px4_airframe_field.model)
 
                 # UI to configure the Ardupilot settings
                 with ardupilot_menu:
                     with ui.VStack(height=0, spacing=10, name="frame_v_stack"):
                         ui.Spacer(height=WidgetWindow.GENERAL_SPACING)
                         with ui.HStack():
-                            ui.Label("Auto-launch Ardupilot", name="label", width=WidgetWindow.LABEL_PADDING + 10)
+                            ui.Label("Auto-launch Ardupilot", name="label",
+                                     width=WidgetWindow.LABEL_PADDING + 10)
                             ardupilot_checkbox = ui.CheckBox()
-                            ardupilot_checkbox.model.set_value(self._delegate._autostart_ardupilot)
-                            self._delegate.set_ardupilot_autostart_checkbox(ardupilot_checkbox.model)
+                            ardupilot_checkbox.model.set_value(
+                                self._delegate._autostart_ardupilot)
+                            self._delegate.set_ardupilot_autostart_checkbox(
+                                ardupilot_checkbox.model)
 
                         with ui.HStack():
-                            ui.Label("ArduPilot Path", name="label", width=WidgetWindow.LABEL_PADDING - 20)
-                            ardupilot_path_field = ui.StringField(name="ardupilot_path", width=300)
-                            ardupilot_path_field.model.set_value(self._delegate._ardupilot_dir)
-                            self._delegate.set_ardupilot_directory_field(ardupilot_path_field.model)
+                            ui.Label("ArduPilot Path", name="label",
+                                     width=WidgetWindow.LABEL_PADDING - 20)
+                            ardupilot_path_field = ui.StringField(
+                                name="ardupilot_path", width=300)
+                            ardupilot_path_field.model.set_value(
+                                self._delegate._ardupilot_dir)
+                            self._delegate.set_ardupilot_directory_field(
+                                ardupilot_path_field.model)
 
-                            ui.Button("Reset", enabled=True, clicked_fn=self._delegate.on_reset_ardupilot_path)
-                            ui.Button("Make Default", enabled=True, clicked_fn=self._delegate.on_set_new_default_ardupilot_path)
+                            ui.Button(
+                                "Reset", enabled=True, clicked_fn=self._delegate.on_reset_ardupilot_path)
+                            ui.Button("Make Default", enabled=True,
+                                      clicked_fn=self._delegate.on_set_new_default_ardupilot_path)
 
                         with ui.HStack():
-                            ui.Label("ArduPilot airframe", name="label", width=WidgetWindow.LABEL_PADDING)
-                            ardupilot_airframe_field = ui.StringField(name="ardupilot_model")
-                            ardupilot_airframe_field.model.set_value(self._delegate._ardupilot_airframe)
-                            self._delegate.set_ardupilot_airframe_field(ardupilot_airframe_field.model)
-                
-                ardupilot_menu.visible = False # Only px4 menu is visible at initialization
+                            ui.Label("ArduPilot airframe", name="label",
+                                     width=WidgetWindow.LABEL_PADDING)
+                            ardupilot_airframe_field = ui.StringField(
+                                name="ardupilot_model")
+                            ardupilot_airframe_field.model.set_value(
+                                self._delegate._ardupilot_airframe)
+                            self._delegate.set_ardupilot_airframe_field(
+                                ardupilot_airframe_field.model)
+
+                ardupilot_menu.visible = False  # Only px4 menu is visible at initialization
 
     def _viewport_camera_frame(self):
         """
@@ -442,7 +496,8 @@ class WidgetWindow(ui.Window):
                 # Iterate over the position and rotation menus
                 with ui.HStack():
                     with ui.HStack():
-                        ui.Label("Position", name="transform", width=50, height=20)
+                        ui.Label("Position", name="transform",
+                                 width=50, height=20)
                         ui.Spacer()
                     # Fields X, Y and Z
                     for axis, default_value in zip(all_axis, default_values):
@@ -457,11 +512,14 @@ class WidgetWindow(ui.Window):
                                         "corner_flag": ui.CornerFlag.LEFT,
                                     },
                                 )
-                                ui.Label(axis, height=20, name="transform_label", alignment=ui.Alignment.CENTER)
-                            float_drag = ui.FloatDrag(name="transform", min=-1000000, max=1000000, step=0.01)
+                                ui.Label(
+                                    axis, height=20, name="transform_label", alignment=ui.Alignment.CENTER)
+                            float_drag = ui.FloatDrag(
+                                name="transform", min=-1000000, max=1000000, step=0.01)
                             float_drag.model.set_value(default_value)
                             # Save the model of each FloatDrag such that we can access its values later on
-                            self._camera_transform_models.append(float_drag.model)
+                            self._camera_transform_models.append(
+                                float_drag.model)
                             ui.Circle(
                                 name="transform", width=20, height=20, radius=3.5, size_policy=ui.CircleSizePolicy.FIXED
                             )
@@ -469,7 +527,8 @@ class WidgetWindow(ui.Window):
                 # Iterate over the position and rotation menus
                 with ui.HStack():
                     with ui.HStack():
-                        ui.Label("Target", name="transform", width=50, height=20)
+                        ui.Label("Target", name="transform",
+                                 width=50, height=20)
                         ui.Spacer()
                     # Fields X, Y and Z
                     for axis, default_value in zip(all_axis, target_default_values):
@@ -484,11 +543,14 @@ class WidgetWindow(ui.Window):
                                         "corner_flag": ui.CornerFlag.LEFT,
                                     },
                                 )
-                                ui.Label(axis, height=20, name="transform_label", alignment=ui.Alignment.CENTER)
-                            float_drag = ui.FloatDrag(name="transform", min=-1000000, max=1000000, step=0.01)
+                                ui.Label(
+                                    axis, height=20, name="transform_label", alignment=ui.Alignment.CENTER)
+                            float_drag = ui.FloatDrag(
+                                name="transform", min=-1000000, max=1000000, step=0.01)
                             float_drag.model.set_value(default_value)
                             # Save the model of each FloatDrag such that we can access its values later on
-                            self._camera_transform_models.append(float_drag.model)
+                            self._camera_transform_models.append(
+                                float_drag.model)
                             ui.Circle(
                                 name="transform", width=20, height=20, radius=3.5, size_policy=ui.CircleSizePolicy.FIXED
                             )
@@ -536,15 +598,20 @@ class WidgetWindow(ui.Window):
                                             "corner_flag": ui.CornerFlag.LEFT,
                                         },
                                     )
-                                    ui.Label(axis, name="transform_label", alignment=ui.Alignment.CENTER)
+                                    ui.Label(axis, name="transform_label",
+                                             alignment=ui.Alignment.CENTER)
                                 if component == "Position":
-                                    float_drag = ui.FloatDrag(name="transform", min=-1000000, max=1000000, step=0.01)
+                                    float_drag = ui.FloatDrag(
+                                        name="transform", min=-1000000, max=1000000, step=0.01)
                                     float_drag.model.set_value(default_value)
                                 else:
-                                    float_drag = ui.FloatDrag(name="transform", min=-180.0, max=180.0, step=0.01)
+                                    float_drag = ui.FloatDrag(
+                                        name="transform", min=-180.0, max=180.0, step=0.01)
                                 # Save the model of each FloatDrag such that we can access its values later on
-                                self._vehicle_transform_models.append(float_drag.model)
-                                ui.Circle(name="transform", width=20, radius=3.5, size_policy=ui.CircleSizePolicy.FIXED)
+                                self._vehicle_transform_models.append(
+                                    float_drag.model)
+                                ui.Circle(name="transform", width=20, radius=3.5,
+                                          size_policy=ui.CircleSizePolicy.FIXED)
                 ui.Spacer(height=0)
 
     # ------------------------------------------------------------------------------------------------
@@ -555,9 +622,11 @@ class WidgetWindow(ui.Window):
 
         # Extract the vehicle desired position and orientation for spawning
         if len(self._vehicle_transform_models) == 6:
-            vehicle_pos = np.array([self._vehicle_transform_models[i].get_value_as_float() for i in range(3)])
+            vehicle_pos = np.array(
+                [self._vehicle_transform_models[i].get_value_as_float() for i in range(3)])
             vehicel_orientation = np.array(
-                [self._vehicle_transform_models[i].get_value_as_float() for i in range(3, 6)]
+                [self._vehicle_transform_models[i].get_value_as_float()
+                 for i in range(3, 6)]
             )
             return vehicle_pos, vehicel_orientation
 
@@ -570,8 +639,10 @@ class WidgetWindow(ui.Window):
 
         # Extract the camera desired position and the target it is pointing to
         if len(self._camera_transform_models) == 6:
-            camera_pos = np.array([self._camera_transform_models[i].get_value_as_float() for i in range(3)])
-            camera_target = np.array([self._camera_transform_models[i].get_value_as_float() for i in range(3, 6)])
+            camera_pos = np.array(
+                [self._camera_transform_models[i].get_value_as_float() for i in range(3)])
+            camera_target = np.array(
+                [self._camera_transform_models[i].get_value_as_float() for i in range(3, 6)])
             return camera_pos, camera_target
 
         return None, None

@@ -15,10 +15,11 @@ from pxr import Usd, Gf
 
 # High level Isaac sim APIs
 import omni.usd
-from omni.isaac.core.utils.prims import define_prim, get_prim_at_path
+from omni.isaac.core.utils.prims import define_prim, get_prim_at_path, create_prim
 from omni.usd import get_stage_next_free_path
 from omni.isaac.core.robots.robot import Robot
 from omni.isaac.dynamic_control import _dynamic_control
+import omni.graph.core as og
 
 # Extension APIs
 from pegasus.simulator.logic.state import State
@@ -44,7 +45,46 @@ def get_world_transform_xform(prim: Usd.Prim):
 
 
 class Vehicle(Robot):
-    
+    # all the code around the zed integration
+    def _init_zed_integration(self, stage_prefix: str):
+        zed_usd_path = PegasusInterface().zed_usd_path
+        self._zed_prefix = get_stage_next_free_path(
+            self._current_stage, stage_prefix + "/body/zed", False)
+        self._zed_prim = create_prim(
+            prim_path=self._zed_prefix,
+            prim_type="Xform",
+            usd_path=zed_usd_path,
+            translation=np.array([0.1, 0.0, -0.07])
+        )
+
+        # https://docs.isaacsim.omniverse.nvidia.com/4.2.0/advanced_tutorials/tutorial_advanced_omnigraph_scripting.html#isaac-sim-app-tutorial-advanced-omnigraph-scripting
+        keys = og.Controller.Keys
+        graph_path = "/ActionGraph"
+        (graph_handle, nodes, _, _) = og.Controller.edit(
+            {"graph_path": graph_path, "evaluator_name": "execution"},
+            {
+                keys.CREATE_NODES: [
+                    ("on_playback_tick", "omni.graph.action.OnPlaybackTick"),
+                    ("zed_camera_streamer", "sl.sensor.camera.ZED_Camera"),
+                ],
+                keys.SET_VALUES: [
+                    ("zed_camera_streamer.inputs:camera_prim", self._zed_prefix)
+                ],
+                keys.CONNECT: [
+                    ("on_playback_tick.outputs:tick",
+                     "zed_camera_streamer.inputs:exec_in")
+                ]
+            }
+        )
+
+    def _init_follow_camera(self, stage_prefix: str):
+        self._follow_camera_path = get_stage_next_free_path(
+            self._current_stage, stage_prefix + "/folloCameraBody", False)
+        self._follow_camera_prim = create_prim(
+            prim_path=self._follow_camera_path,
+            prim_type="Camera"
+        )
+
     def __init__(
         self,
         stage_prefix: str,
@@ -72,7 +112,8 @@ class Vehicle(Robot):
 
         # Save the name with which the vehicle will appear in the stage
         # and the name of the .usd file that contains its description
-        self._stage_prefix = get_stage_next_free_path(self._current_stage, stage_prefix, False)
+        self._stage_prefix = get_stage_next_free_path(
+            self._current_stage, stage_prefix, False)
         self._usd_file = usd_path
 
         # Get the vehicle name by taking the last part of vehicle stage prefix
@@ -83,6 +124,9 @@ class Vehicle(Robot):
         self._prim = get_prim_at_path(self._stage_prefix)
         self._prim.GetReferences().AddReference(self._usd_file)
 
+        self._init_zed_integration(stage_prefix)
+        # self._init_follow_camera(stage_prefix)
+
         # Initialize the "Robot" class
         # Note: we need to change the rotation to have qw first, because NVidia
         # does not keep a standard of quaternions inside its own libraries (not good, but okay)
@@ -90,7 +134,8 @@ class Vehicle(Robot):
             prim_path=self._stage_prefix,
             name=self._stage_prefix,
             position=init_pos,
-            orientation=[init_orientation[3], init_orientation[0], init_orientation[1], init_orientation[2]],
+            orientation=[init_orientation[3], init_orientation[0],
+                         init_orientation[1], init_orientation[2]],
             articulation_controller=None,
         )
 
@@ -108,29 +153,34 @@ class Vehicle(Robot):
         self._state = State()
 
         # Add a callback to the physics engine to update the current state of the system
-        self._world.add_physics_callback(self._stage_prefix + "/state", self.update_state)
+        self._world.add_physics_callback(
+            self._stage_prefix + "/state", self.update_state)
 
         # Add the update method to the physics callback if the world was received
         # so that we can apply forces and torques to the vehicle. Note, this method should        # be implemented in classes that inherit the vehicle object
-        self._world.add_physics_callback(self._stage_prefix + "/update", self.update)
+        self._world.add_physics_callback(
+            self._stage_prefix + "/update", self.update)
 
         # Set the flag that signals if the simulation is running or not
         self._sim_running = False
 
         # Add a callback to start/stop of the simulation once the play/stop button is hit
-        self._world.add_timeline_callback(self._stage_prefix + "/start_stop_sim", self.sim_start_stop)
+        self._world.add_timeline_callback(
+            self._stage_prefix + "/start_stop_sim", self.sim_start_stop)
 
         # --------------------------------------------------------------------
         # -------------------- Add sensors to the vehicle --------------------
         # --------------------------------------------------------------------
         self._sensors = sensors
-        
+
         for sensor in self._sensors:
-            sensor.initialize(self, PegasusInterface().latitude, PegasusInterface().longitude, PegasusInterface().altitude)
+            sensor.initialize(self, PegasusInterface(
+            ).latitude, PegasusInterface().longitude, PegasusInterface().altitude)
 
         # Add callbacks to the physics engine to update each sensor at every timestep
         # and let the sensor decide depending on its internal update rate whether to generate new data
-        self._world.add_physics_callback(self._stage_prefix + "/Sensors", self.update_sensors)
+        self._world.add_physics_callback(
+            self._stage_prefix + "/Sensors", self.update_sensors)
 
         # --------------------------------------------------------------------
         # -------------------- Add the graphical sensors to the vehicle ------
@@ -141,8 +191,8 @@ class Vehicle(Robot):
             graphical_sensor.initialize(self)
 
         # Add callbacks to the rendering engine to update each graphical sensor at every timestep of the rendering engine
-        self._world.add_render_callback(self._stage_prefix + "/GraphicalSensors", self.update_graphical_sensors)
-
+        self._world.add_render_callback(
+            self._stage_prefix + "/GraphicalSensors", self.update_graphical_sensors)
 
         # --------------------------------------------------------------------
         # -------------------- Add the graphs to the vehicle -----------------
@@ -151,7 +201,7 @@ class Vehicle(Robot):
 
         for graph in self._graphs:
             graph.initialize(self)
-        
+
         # --------------------------------------------------------------------
         # ---- Add (communication/control) backends to the vehicle -----------
         # --------------------------------------------------------------------
@@ -162,8 +212,8 @@ class Vehicle(Robot):
             backend.initialize(self)
 
         # Add a callbacks for the
-        self._world.add_physics_callback(self._stage_prefix + "/mav_state", self.update_sim_state)
-
+        self._world.add_physics_callback(
+            self._stage_prefix + "/mav_state", self.update_sim_state)
 
     def __del__(self):
         """
@@ -186,7 +236,7 @@ class Vehicle(Robot):
             State: The current state of the vehicle, i.e., position, orientation, linear and angular velocities...
         """
         return self._state
-    
+
     @property
     def vehicle_name(self) -> str:
         """Vehicle name.
@@ -262,7 +312,8 @@ class Vehicle(Robot):
         rb = self.get_dc_interface().get_rigid_body(self._stage_prefix + body_part)
 
         # Apply the force to the rigidbody. The force should be expressed in the rigidbody frame
-        self.get_dc_interface().apply_body_force(rb, carb._carb.Float3(force), carb._carb.Float3(pos), False)
+        self.get_dc_interface().apply_body_force(
+            rb, carb._carb.Float3(force), carb._carb.Float3(pos), False)
 
     def apply_torque(self, torque, body_part="/body"):
         """
@@ -308,14 +359,16 @@ class Vehicle(Robot):
 
         # Get the linear acceleration of the body relative to the inertial frame, expressed in the inertial frame
         # Note: we must do this approximation, since the Isaac sim does not output the acceleration of the rigid body directly
-        linear_acceleration = (np.array(linear_vel) - self._state.linear_velocity) / dt
+        linear_acceleration = (np.array(linear_vel) -
+                               self._state.linear_velocity) / dt
 
         # Update the state variable X = [x,y,z]
         self._state.position = np.array(pose.p)
 
         # Get the quaternion according in the [qx,qy,qz,qw] standard
         self._state.attitude = np.array(
-            [rotation_quat_img[0], rotation_quat_img[1], rotation_quat_img[2], rotation_quat_real]
+            [rotation_quat_img[0], rotation_quat_img[1],
+                rotation_quat_img[2], rotation_quat_real]
         )
 
         # Express the velocity of the vehicle in the inertial frame X_dot = [x_dot, y_dot, z_dot]
@@ -324,11 +377,13 @@ class Vehicle(Robot):
         # The linear velocity V =[u,v,w] of the vehicle's body frame expressed in the body frame of reference
         # Note that: x_dot = Rot * V
         self._state.linear_body_velocity = (
-            Rotation.from_quat(self._state.attitude).inv().apply(self._state.linear_velocity)
+            Rotation.from_quat(self._state.attitude).inv().apply(
+                self._state.linear_velocity)
         )
 
         # omega = [p,q,r]
-        self._state.angular_velocity = Rotation.from_quat(self._state.attitude).inv().apply(np.array(ang_vel))
+        self._state.angular_velocity = Rotation.from_quat(
+            self._state.attitude).inv().apply(np.array(ang_vel))
 
         # The acceleration of the vehicle expressed in the inertial frame X_ddot = [x_ddot, y_ddot, z_ddot]
         self._state.linear_acceleration = linear_acceleration
@@ -392,7 +447,8 @@ class Vehicle(Robot):
             # If some data was updated and we have a ros backend (or other), then just update it
             if sensor_data is not None:
                 for backend in self._backends:
-                    backend.update_graphical_sensor(sensor.sensor_type, sensor_data)
+                    backend.update_graphical_sensor(
+                        sensor.sensor_type, sensor_data)
 
     def update_sim_state(self, dt: float):
         """
