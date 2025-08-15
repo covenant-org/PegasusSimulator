@@ -11,7 +11,7 @@ from scipy.spatial.transform import Rotation
 
 # Low level APIs
 import carb
-from pxr import Usd, Gf
+from pxr import Usd, Gf, UsdPhysics
 
 # High level Isaac sim APIs
 import omni.usd
@@ -49,13 +49,16 @@ class Vehicle(Robot):
     def _init_zed_integration(self, stage_prefix: str):
         zed_usd_path = PegasusInterface().zed_usd_path
         self._zed_prefix = get_stage_next_free_path(
-            self._current_stage, stage_prefix + "/body/zed", False)
+            self._current_stage, stage_prefix + "/zed", False)
         self._zed_prim = create_prim(
             prim_path=self._zed_prefix,
             prim_type="Xform",
             usd_path=zed_usd_path,
             translation=np.array([0.1, 0.0, -0.07])
         )
+        joint = UsdPhysics.FixedJoint.Define(self._current_stage, stage_prefix + "/zed_joint")
+        joint.GetBody0Rel().SetTargets([stage_prefix + "/body"])
+        joint.GetBody1Rel().SetTargets([self._zed_prefix + "/base_link"])
 
         # https://docs.isaacsim.omniverse.nvidia.com/4.2.0/advanced_tutorials/tutorial_advanced_omnigraph_scripting.html#isaac-sim-app-tutorial-advanced-omnigraph-scripting
         keys = og.Controller.Keys
